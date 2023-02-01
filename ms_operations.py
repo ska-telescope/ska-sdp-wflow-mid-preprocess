@@ -55,7 +55,9 @@ class ReadMS:
         self.mainTable = tables.table(inputFile)
         self.frequencyTable = tables.table(os.path.join(inputFile[0], 'SPECTRAL_WINDOW'))
         self.polarizationTable = tables.table(os.path.join(inputFile[0], 'POLARIZATION'))
-
+        self.antennaTable = tables.table(os.path.join(inputFile[0], 'ANTENNA'))
+        self.fieldTable = tables.table(os.path.join(inputFile[0], 'FIELD'))
+        
         self.u = {}
         self.v = {}
         self.w = {}
@@ -91,9 +93,9 @@ class ReadMS:
         """
 
         output = tables.tablecolumn(self.frequencyTable, columnName)
-        return output
+        return output 
 
-    def GetAnetnnaTableData(self, columnName):
+    def GetAntennaTableData(self, columnName):
 
         '''
         columnName : takes a string defining the name of the column whose data are required
@@ -102,6 +104,24 @@ class ReadMS:
         It uses casacore functionality for this purpose
 
         '''
+        
+        output = tables.tablecolumn(self.antennaTable, columnName)
+        return output
+
+    def GetFieldTableData(self, columnName):
+        
+
+        '''
+        columnName : takes a string defining the name of the column whose data are required
+
+        This method extracts data tied to a specific column in the main table of the MeasurementSet
+        It uses casacore functionality for this purpose
+
+        '''
+
+        output = tables.table(self.fieldTable, columnName)
+        return output
+
 
     def ListSubTables(self):
 
