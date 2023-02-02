@@ -1,13 +1,16 @@
 import ms_operations
 import argparse
 import numpy as np
+import pickle
 
 parser = argparse.ArgumentParser(description='location of data')
 parser.add_argument('--msloc', type=str, nargs=1, help='location of the MeasurmentSet')
 parser.add_argument('--extract', type=str, nargs=1, help='location of the extracted data from the MS')
+parser.add_argument('--maskloc', type=str, nargs=1, help='location of the RFI mask file')
 
 args = parser.parse_args()
 msFileName = args.msloc
+mask_loc = args.maskloc
 measurementSet = ms_operations.ReadMS(msFileName)
 
 vis = measurementSet.GetMainTableData('DATA')
@@ -40,4 +43,9 @@ np.save("data/antenna2", antenna2)
 time = measurementSet.GetMainTableData('TIME')
 np.save("data/time", time)
 
+rfi_file = open(mask_loc[0], "rb")
+rfi_mask = pickle.load(rfi_file)
+np.save("data/rfi_mask", rfi_mask)
+
+print(rfi_file)
 

@@ -5,14 +5,12 @@ import argparse
 
 parser = argparse.ArgumentParser(description='extracted data location')
 parser.add_argument('--dataloc', type=str, nargs=1, help='the location of data files')
-parser.add_argument('--maskloc', type=str, nargs=1, help='the location of RFI mask file')
 args = parser.parse_args()
 data_dir = args.dataloc
-mask_loc = args.maskloc
 
 parset = dp3.parameterset.ParameterSet()
 
-parset.add("freqstep", 8)
+parset.add("freqstep", str(8))
 
 
 vis_loc = data_dir[0] + "/vis.npy"
@@ -25,6 +23,7 @@ antenna1_loc = data_dir[0] + "/antenna1.npy"
 antenna2_loc = data_dir[0] + "/antenna2.npy"
 uvw_loc = data_dir[0] + "/uvw.npy"
 flag_loc = data_dir[0] + "/flag.npy"
+mask_loc = data_dir[0] + "/rfi_mask.npy"
 
 
 vis = np.load(vis_loc)
@@ -53,6 +52,9 @@ ant_pos = np.load(ant_pos_loc)
 ant_diameter = np.load(ant_diameter_loc)
 antenna1 = np.load(antenna1_loc)
 antenna2 = np.load(antenna2_loc)
+
+rfi_mask = np.load(mask_loc)
+print(rfi_mask)
 
 dpinfo.set_antennas(ant_name, ant_diameter, ant_pos, antenna1, antenna2)
 
