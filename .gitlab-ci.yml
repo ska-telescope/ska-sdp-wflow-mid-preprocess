@@ -27,16 +27,3 @@ include:
 .reports: &ready_reports
   - mkdir -p build/reports/
 
-pages:
-  stage: publish
-  image: alpine
-  dependencies:
-    - build-test-debug
-  script:
-    - rm -rf public
-    - mkdir -p public
-    - mv coverage/ public/
-  artifacts:
-    paths:
-      - public
-      
