@@ -12,6 +12,10 @@ stages:
 
 # Include CI templates
 include:
+  # Release automation
+  - project: "ska-telescope/templates-repository"
+    file: "gitlab-ci/includes/release.gitlab-ci.yml"
+
   # Docs pages
   - project: "ska-telescope/templates-repository"
     file: "gitlab-ci/includes/docs.gitlab-ci.yml"
@@ -23,3 +27,16 @@ include:
 .reports: &ready_reports
   - mkdir -p build/reports/
 
+pages:
+  stage: publish
+  image: alpine
+  dependencies:
+    - build-test-debug
+  script:
+    - rm -rf public
+    - mkdir -p public
+    - mv coverage/ public/
+  artifacts:
+    paths:
+      - public
+      
