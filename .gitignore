@@ -20,12 +20,3 @@ __pycache__/
 # Test data
 *.bin
 tests/test_data/
-
-# Make files
-Makefile
-CMakeFiles/
-*.cmake
-CMakeCache.txt
-
-# Version file
-sdp_func_version.h
