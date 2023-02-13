@@ -76,9 +76,18 @@ parset.add("preflagger.chan", str(chan))
 dpinfo.set_antennas(ant_name, ant_diameter, ant_pos, antenna1, antenna2)
 
 preflagger_step = dp3.make_step("preflagger", parset,"preflagger.", dp3.MsType.regular)
-null_step = dp3.make_step("null", parset, "", dp3.MsType.regular)
-preflagger_step.set_next_step(null_step) 
+#aoflagger_step = dp3.make_step("aoflagger", parset, "aoflagger.", dp3.MsType.regular)
+#averaging_step = dp3.make_step("averaging", parset, "averaging.", dp3.MsType.regular)
+#null_step = dp3.make_step("null", parset, "", dp3.MsType.regular)
 
+#preflagger_step.set_next_step(aoflagger_step)
+#aoflagger_step.set_next_step(null_step)
+
+#preflagger_step.set_next_step(aoflagger_step)
+print("Heeelllloooo!")
+#aoflagger_step.set_next_step(averaging_step)
+
+ 
 def flags_ratio(flags):
     tot = flags.shape[0] * flags.shape[1] * flags.shape[2]  
     flag_sum = np.sum(np.sum(np.sum(np.sum(flags))))
@@ -89,7 +98,10 @@ for time in range(num_times):
     print(flags_ratio(flags[time, :, :, :]))
     dpbuffer.set_flags(flags[time, :, :, :])
     preflagger_step.process(dpbuffer)
+    print("Is this where?")
     myflags = dpbuffer.get_flags()
+
+preflagger_step.finish()
 
 
 
