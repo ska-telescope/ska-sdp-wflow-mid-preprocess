@@ -84,7 +84,6 @@ preflagger_step = dp3.make_step("preflagger", parset,"preflagger.", dp3.MsType.r
 #aoflagger_step.set_next_step(null_step)
 
 #preflagger_step.set_next_step(aoflagger_step)
-print("Heeelllloooo!")
 #aoflagger_step.set_next_step(averaging_step)
 
  
@@ -98,7 +97,6 @@ for time in range(num_times):
     print(flags_ratio(flags[time, :, :, :]))
     dpbuffer.set_flags(flags[time, :, :, :])
     preflagger_step.process(dpbuffer)
-    print("Is this where?")
     myflags = dpbuffer.get_flags()
 
 preflagger_step.finish()
