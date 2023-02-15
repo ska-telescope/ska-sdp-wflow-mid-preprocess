@@ -86,22 +86,23 @@ for freq in range(num_freqs):
        chan = np.append(chan, freq)
 
 
-parset.add("preflagger.chan", str(chan))
-
+parset.add("preflag.chan", str(chan))
+parset.add("average.freqstep", str(8))
+parset.add("aoflag.autocorr", str(True))
 
 dpinfo.set_antennas(ant_name, ant_diameter, ant_pos, antenna1, antenna2)
 
-preflagger_step = dp3.make_step("preflagger", parset,"preflagger.", dp3.MsType.regular)
+preflag_step = dp3.make_step("preflag", parset,"preflag.", dp3.MsType.regular)
 #null_step = dp3.make_step("null", parset, "", dp3.MsType.regular)
-averaging_step = dp3.make_step("averaging", parset, "averaging.", dp3.MsType.regular)
-aoflagger_step = dp3.make_step("aoflagger", parset, "aoflagger.", dp3.MsType.regular)
+average_step = dp3.make_step("average", parset, "average.", dp3.MsType.regular)
+aoflag_step = dp3.make_step("aoflag", parset, "aoflag.", dp3.MsType.regular)
 
-preflagger_step.set_info(dpinfo)
-aoflagger_step.set_info(dpinfo)
-averaging_step.set_info(dpinfo)
+preflag_step.set_info(dpinfo)
+aoflag_step.set_info(dpinfo)
+average_step.set_info(dpinfo)
 
-preflagger_step.set_next_step(aoflagger_step) 
-preflagger_step.set_next_step(averaging_step)
+preflag_step.set_next_step(aoflag_step) 
+preflag_step.set_next_step(average_step)
 
 
 def flags_ratio(flags):
