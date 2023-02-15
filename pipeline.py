@@ -24,6 +24,9 @@ ant_diameter_loc = data_dir[0] + "/ant_diameter.npy"
 antenna1_loc = data_dir[0] + "/antenna1.npy"
 antenna2_loc = data_dir[0] + "/antenna2.npy"
 uvw_loc = data_dir[0] + "/uvw.npy"
+time_loc = data_dir[0] + "/time.npy"
+interval_loc = data_dir[0] + "/interval.npy"
+phase_center_loc = data_dir[0] + "/phase_center.npy"
 flag_loc = data_dir[0] + "/flag.npy"
 mask_loc = data_dir[0] + "/rfi_mask.npy"
 
@@ -41,11 +44,24 @@ print(vis_ms_dims)
 
 num_correlations = vis_ms_dims[2] 
 
+time = np.load(time_loc)
+interval = np.load(interval_loc)
+phase_center = np.load(phase_center_loc)[0][0]
 
+first_time = time[0]
+last_time = time[-1]
+interval = interval[0]
+
+print(first_time)
+print(last_time)
+print(interval)
+print(phase_center)
 
 dpinfo = dp3.DPInfo(num_correlations)
+dpinfo.phase_center = phase_center
 
 dpinfo.set_channels(chan_freq, chan_width)
+dpinfo.set_times(first_time, last_time, interval)
 
 
 ant_name = np.load(ant_name_loc)
@@ -76,11 +92,17 @@ parset.add("preflagger.chan", str(chan))
 dpinfo.set_antennas(ant_name, ant_diameter, ant_pos, antenna1, antenna2)
 
 preflagger_step = dp3.make_step("preflagger", parset,"preflagger.", dp3.MsType.regular)
-null_step = dp3.make_step("null", parset, "", dp3.MsType.regular)
-#averaging_step = dp3.make_step("averaging", parset, "averaging.", dp3.MsType.regular)
-#aoflagger_step = dp3.make_step("aoflagger", parset, "aoflagger.", dp3.MsType.regular)
-#aoflagger_step.set_next_step(null_step)
-preflagger_step.set_next_step(null_step) 
+#null_step = dp3.make_step("null", parset, "", dp3.MsType.regular)
+averaging_step = dp3.make_step("averaging", parset, "averaging.", dp3.MsType.regular)
+aoflagger_step = dp3.make_step("aoflagger", parset, "aoflagger.", dp3.MsType.regular)
+
+preflagger_step.set_info(dpinfo)
+aoflagger_step.set_info(dpinfo)
+averaging_step.set_info(dpinfo)
+
+preflagger_step.set_next_step(aoflagger_step) 
+preflagger_step.set_next_step(averaging_step)
+
 
 def flags_ratio(flags):
     tot = flags.shape[0] * flags.shape[1] * flags.shape[2]  
@@ -89,10 +111,9 @@ def flags_ratio(flags):
 
 for time in range(num_times):
     dpbuffer = dp3.DPBuffer()
-    print(flags_ratio(flags[time, :, :, :]))
     dpbuffer.set_flags(flags[time, :, :, :])
     dpbuffer.set_data(vis[time, :, :, :])
     preflagger_step.process(dpbuffer)
-    #aoflagger_step.process(dpbuffer)
     myflags = dpbuffer.get_flags()
+
 

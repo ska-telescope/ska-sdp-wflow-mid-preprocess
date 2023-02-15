@@ -118,8 +118,8 @@ class ReadMS:
         It uses casacore functionality for this purpose
 
         '''
-
-        output = tables.table(self.fieldTable, columnName)
+       
+        output = tables.tablecolumn(self.fieldTable, columnName)
         return output
 
 

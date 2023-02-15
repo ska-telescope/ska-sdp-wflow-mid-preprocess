@@ -42,6 +42,12 @@ np.save("data/antenna2", antenna2)
 
 time = measurementSet.GetMainTableData('TIME')
 np.save("data/time", time)
+interval = measurementSet.GetMainTableData('INTERVAL')
+np.save("data/interval", interval)
+
+phase_center = measurementSet.GetFieldTableData('PHASE_DIR')
+np.save("data/phase_center", phase_center)
+
 
 rfi_file = open(mask_loc[0], "rb")
 rfi_mask = pickle.load(rfi_file)
