@@ -3,8 +3,8 @@ import dp3
 import argparse
 import sys
 import ms_operations
-
-
+import pickle
+from dp3 import steps
 
 parser = argparse.ArgumentParser(description='pipeline settings')
 parser.add_argument('--msloc', type=str, nargs=1, help='location of the measurementset')
@@ -12,7 +12,7 @@ parser.add_argument('--maskloc', type=str, nargs=1, help='location of the RFI ma
 
 args = parser.parse_args()
 
-data_dir = args.msloc
+ms_loc = args.msloc
 mask_loc = args.maskloc
 
 parset = dp3.parameterset.ParameterSet()
@@ -20,7 +20,7 @@ parset = dp3.parameterset.ParameterSet()
 parset.add("freqstep", str(8))
 
 
-measurementSet = ms_operations.ReadMS(msFileName)
+measurementSet = ms_operations.ReadMS(ms_loc)
 
 vis_ms = measurementSet.GetMainTableData('DATA')
 flags_ms = measurementSet.GetMainTableData('FLAG')
@@ -32,8 +32,6 @@ time = measurementSet.GetMainTableData('TIME')
 interval = measurementSet.GetMainTableData('INTERVAL')
 phase_center = measurementSet.GetFieldTableData('PHASE_DIR')
 
-rfi_mask = np.load(mask_loc)
-
 
 # define DPInfo
 vis_ms_dims = vis_ms.shape
@@ -44,7 +42,7 @@ print()
 
 
 # DPInfo: phase center
-dpinfo.phase_center = phase_center
+#dpinfo.phase_center = phase_center
 print("phase center: " + str(phase_center))
 print()
 
@@ -102,29 +100,36 @@ average_step = dp3.make_step("average", parset, "average.", dp3.MsType.regular)
 aoflag_step = dp3.make_step("aoflag", parset, "aoflag.", dp3.MsType.regular)
 null_step = dp3.make_step("null", parset, "", dp3.MsType.regular)
 
+queue_step = steps.QueueOutput(parset, "")
+queue_step.set_info(dpinfo)
+
 preflag_step.set_info(dpinfo)
 aoflag_step.set_info(dpinfo)
 average_step.set_info(dpinfo)
 
-preflag_step.set_next_step(aoflag_step) 
-aoflag_step.set_next_step(average_step)
-average_step.set_next_step(null_step)
+#preflag_step.set_next_step(null_step) 
+aoflag_step.set_next_step(queue_step)
+#average_step.set_next_step(null_step)
 
 vis = vis_ms.reshape([num_times, num_baselines, num_freqs, num_correlations])
 flags = flags_ms.reshape([num_times, num_baselines, num_freqs, num_correlations])
 
-for time in range(num_times):
+for t in range(num_times):
+    print(t)
     dpbuffer = dp3.DPBuffer()
-    dpbuffer.set_flags(flags[time, :, :, :])
-    dpbuffer.set_data(vis[time, :, :, :])
-    preflag_step.process(dpbuffer)
+    dpbuffer.set_flags(flags[t, :, :, :])
+    dpbuffer.set_data(vis[t, :, :, :])
+    aoflag_step.process(dpbuffer)
 
-preflag_step.finish()
+aoflag_step.finish()
 
+print("This is after aoflag")
 
-output_flags = numpy.zeros((num_times, num_baselines, num_freqs, num_correlations),  numpy.bool8)
+output_flags = np.zeros((num_times, num_baselines, num_freqs, num_correlations),  np.bool8)
 
-for i in numpy.arange(len(num_times)):
+for i in range(num_times):
+        print(i)
         dpbuffer_from_queue = queue_step.queue.get()
-        output_flags [i,:,:,:] = numpy.array(dpbuffer_from_queue.get_flags(), copy=False) 
+        output_flags [i,:,:,:] = np.array(dpbuffer_from_queue.get_flags(), copy=False) 
+
 
