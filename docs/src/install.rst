@@ -12,6 +12,12 @@ Please note that currently all the packages required for the DP3 (and the DP3 it
 More instructions can be found in:
 https://confluence.skatelescope.org/display/SE/Cookbook+for+building+astronomical+packages+from+source 
 
+Please also note that for the DP3 to be importable in python, the following variable should be set:
+
+  .. code-block:: bash
+
+     export PYTHONPATH="/home/your_home/where_you_installed_dp3_and_others/lib/python3.8/site-packages:$PYTHONPATH"      
+
 Uninstalling
 ------------
 
