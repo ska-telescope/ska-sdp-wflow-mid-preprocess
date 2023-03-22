@@ -86,10 +86,10 @@ rfi_mask = pickle.load(rfi_file)
 
 mychan = np.where(rfi_mask)
 #chan = mychan[0].tolist()
-
+chan = [1, 22, 30]
 parset = dp3.parameterset.ParameterSet()
 
-parset.add("preflag.chan", "[1, 8, 10]")
+parset.add("preflag.chan", str(chan))
 parset.add("average.freqstep", str(8))
 parset.add("aoflag.autocorr", str(True))
 
@@ -106,7 +106,7 @@ preflag_step.set_info(dpinfo)
 aoflag_step.set_info(dpinfo)
 average_step.set_info(dpinfo)
 
-#preflag_step.set_next_step(aoflag_step) 
+preflag_step.set_next_step(aoflag_step) 
 aoflag_step.set_next_step(queue_step)
 #average_step.set_next_step(null_step)
 
@@ -118,9 +118,9 @@ for t in range(num_times):
     dpbuffer = dp3.DPBuffer()
     dpbuffer.set_flags(flags[t, :, :, :])
     dpbuffer.set_data(vis[t, :, :, :])
-    aoflag_step.process(dpbuffer)
+    preflag_step.process(dpbuffer)
 
-aoflag_step.finish()
+preflag_step.finish()
 
 output_flags = np.zeros((num_times, num_baselines, num_freqs, num_correlations),  np.bool8)
 
