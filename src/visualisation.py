@@ -1,5 +1,6 @@
 import seaborn as sns
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
 
 class visualise:
     ''' 
@@ -44,6 +45,24 @@ class visualise:
          sc_fld_range = [begin, end]
          return  sc_fld_range
 
+     def illustrate(self, the2darray, type, where):
+         if type == "flags":
+            cmap = sns.cubehelix_palette(start=1.8, rot=1.1, light=0.7, n_colors=2)
+            ticks = np.array([0, 1])
+            ax = sns.heatmap(flags_2sm, cmap=ListedColormap(cmap), cbar_kws={"ticks": [0, 1]})
+            plt.title('flags')
+            plt.xlabel('channels')
+            plt.ylabel('time')
+            plt.show()
+            plt.savefig(where)
+         if type == "visibilities":
+            cmap = sns.cubehelix_palette(start=1.8, rot=1.1, light=0.7, n_colors=1000)
+            ax = sns.heatmap(flags_2sm, cmap=ListedColormap(cmap))
+            plt.title('visibilities')
+            plt.xlabel('channels')
+            plt.ylabel('time')
+            plt.show()
+            plt.savefig(where)
 
  
 

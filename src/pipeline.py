@@ -9,11 +9,13 @@ from dp3 import steps
 parser = argparse.ArgumentParser(description='pipeline settings')
 parser.add_argument('--msloc', type=str, nargs=1, help='location of the measurementset')
 parser.add_argument('--maskloc', type=str, nargs=1, help='location of the RFI mask file')
+parser.add_argument('--outloc', type=str, nargs=1, help='location of output')
 
 args = parser.parse_args()
 
 ms_loc = args.msloc
 mask_loc = args.maskloc
+output_loc = args.outloc
 
 parset = dp3.parameterset.ParameterSet()
 
@@ -55,6 +57,9 @@ antenna1 = measurementSet.GetMainTableData('ANTENNA1')
 antenna2 = measurementSet.GetMainTableData('ANTENNA2')
 dpinfo.set_antennas(ant_name, ant_diameter, ant_pos, antenna1, antenna2)
 
+scan_num = measurementSet.GetMainTable('SCAN_NUMBER')
+field_id = measurementSet.GetMainTable('FIELD_ID')
+
 num_ants = len(ant_name)
 num_baselines = int(num_ants * (num_ants + 1)/2)
 num_freqs = len(chan_freq)
@@ -86,10 +91,12 @@ rfi_mask = pickle.load(rfi_file)
 
 mychan = np.where(rfi_mask)
 #chan = mychan[0].tolist()
-chan = [1, 22, 30]
+chan = "[1,22,30]"
 parset = dp3.parameterset.ParameterSet()
 
-parset.add("preflag.chan", str(chan))
+print(str(chan))
+
+parset.add("preflag.chan", chan)
 parset.add("average.freqstep", str(8))
 parset.add("aoflag.autocorr", str(True))
 
@@ -106,7 +113,7 @@ preflag_step.set_info(dpinfo)
 aoflag_step.set_info(dpinfo)
 average_step.set_info(dpinfo)
 
-preflag_step.set_next_step(aoflag_step) 
+#preflag_step.set_next_step(queue_step) 
 aoflag_step.set_next_step(queue_step)
 #average_step.set_next_step(null_step)
 
@@ -118,9 +125,9 @@ for t in range(num_times):
     dpbuffer = dp3.DPBuffer()
     dpbuffer.set_flags(flags[t, :, :, :])
     dpbuffer.set_data(vis[t, :, :, :])
-    preflag_step.process(dpbuffer)
+    aoflag_step.process(dpbuffer)
 
-preflag_step.finish()
+aoflag_step.finish()
 
 output_flags = np.zeros((num_times, num_baselines, num_freqs, num_correlations),  np.bool8)
 
@@ -129,3 +136,22 @@ for i in range(num_times):
         dpbuffer_from_queue = queue_step.queue.get()
         output_flags [i,:,:,:] = np.array(dpbuffer_from_queue.get_flags(), copy=False) 
 
+
+
+
+
+out_vis_loc = output_loc[0] + "/vis.npy"
+out_old_flg_loc = output_loc[0] + "/old_flags.npy"
+out_new_flg_loc = output_loc[0] + "/new_flags.npy"
+ant1 = output_loc[0] + "/antenna1.npy"
+ant2 = output_loc[0] + "/antenna2.npy"
+fld_id = output_loc[0] + "/field_id.npy"
+sc_num = output_loc[0] + "/scan_number.npy"
+
+np.save(out_vis_loc, vis)
+np.save(out_old_flg_loc, flags)
+np.save(out_new_flg_loc,  output_flags)
+np.save(ant1, antenna1)
+np.save(ant2, antenna2)
+np.save(fld_id, field_id)
+np.save(sc_num, scan_num)
