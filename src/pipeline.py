@@ -57,8 +57,8 @@ antenna1 = measurementSet.GetMainTableData('ANTENNA1')
 antenna2 = measurementSet.GetMainTableData('ANTENNA2')
 dpinfo.set_antennas(ant_name, ant_diameter, ant_pos, antenna1, antenna2)
 
-scan_num = measurementSet.GetMainTable('SCAN_NUMBER')
-field_id = measurementSet.GetMainTable('FIELD_ID')
+scan_num = measurementSet.GetMainTableData('SCAN_NUMBER')
+field_id = measurementSet.GetMainTableData('FIELD_ID')
 
 num_ants = len(ant_name)
 num_baselines = int(num_ants * (num_ants + 1)/2)
@@ -148,10 +148,13 @@ ant2 = output_loc[0] + "/antenna2.npy"
 fld_id = output_loc[0] + "/field_id.npy"
 sc_num = output_loc[0] + "/scan_number.npy"
 
+field_id2 = field_id.reshape(num_times, num_baselines)
+scan_num2 = scan_num.reshape(num_times, num_baselines)
+
 np.save(out_vis_loc, vis)
 np.save(out_old_flg_loc, flags)
 np.save(out_new_flg_loc,  output_flags)
 np.save(ant1, antenna1)
 np.save(ant2, antenna2)
-np.save(fld_id, field_id)
-np.save(sc_num, scan_num)
+np.save(fld_id, field_id2)
+np.save(sc_num, scan_num2)
