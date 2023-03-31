@@ -31,6 +31,9 @@ antenna2 = np.load(data_loc + "/antenna2.npy")
 scan_number = np.load(data_loc + "/scan_number.npy")
 field_id = np.load(data_loc + "/field_id.npy")
 
+print(new_flags.shape)
+
+
 num_antennas = np.unique(antenna1).shape[0]
 num_baselines = int(num_antennas * (num_antennas + 1)/2)
 
@@ -38,9 +41,9 @@ num_baselines = int(num_antennas * (num_antennas + 1)/2)
 myfig = visualisation.visualise(vis, new_flags, antenna1, antenna2, scan_number, field_id)
 
 baseline_idx = myfig.find_the_baseline(ant1, ant2)
-period_of_time = myfig.find_time_range_with_scan_field(scan_num, fld_id)
+begin, end = myfig.find_time_range_with_scan_field(scan_num, fld_id)
 print(baseline_idx)
-print(period_of_time)
+print(str(begin) + "  " + str(end))
 
 where = ""
 type = ""
@@ -48,17 +51,21 @@ type = ""
 if asked_fig == "old_flags":
    where = output_loc + "/old_flags_ant1" + str(ant1) + "_ant2_" + str(ant2) + "_sc_" + str(scan_num) + "_fld_"+ str(fld_id) + ".png"
    type = "flag"
-   mydata = old_flags[period_of_time[0]:period_of_time[1], baseline_idx: num_baselines: (period_of_time[1] - period_of_time[0]) * num_baselines, :, pol]
+   mydata = old_flags[begin:end, baseline_idx, :, pol]
 
 if asked_fig == "new_flags":
    where = output_loc + "/new_flags_ant1" + str(ant1) + "_ant2_" + str(ant2) + "_sc_" + str(scan_num) + "_fld_"+ str(fld_id) + ".png"
    type = "flag"   
-   mydata = new_flags[period_of_time[0]:period_of_time[1], baseline_idx: num_baselines: (period_of_time[1] - period_of_time[0]) * num_baselines, :, pol]
+   mydata = new_flags[begin:end, baseline_idx, :, pol]
 
 if asked_fig == "vis":
    where = output_loc + "/visibility_ant1" + str(ant1) + "_ant2_" + str(ant2) + "_sc_" + str(scan_num) + "_fld_"+ str(fld_id) + ".png"
    type = "vis"
-   mydata = vis[period_of_time[0]:period_of_time[1], baseline_idx: num_baselines: (period_of_time[1] - period_of_time[0]) * num_baselines, :, pol]
- 
-myfig.visualise(mydata, type, where)
+   mydata = abs(vis[begin:end, baseline_idx, :, pol])
 
+mydata_to_fig = np.squeeze(mydata)
+if mydata_to_fig.ndim  == 1:
+   mydata_to_fig.reshape([1, mydata_to_fig.shape[0]])
+
+
+myfig.illustrate(mydata_to_fig, type, where)
