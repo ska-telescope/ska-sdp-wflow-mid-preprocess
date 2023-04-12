@@ -55,7 +55,7 @@ ant_pos  = measurementSet.GetAntennaTableData('POSITION')
 ant_diameter = measurementSet.GetAntennaTableData('DISH_DIAMETER')
 antenna1 = measurementSet.GetMainTableData('ANTENNA1')
 antenna2 = measurementSet.GetMainTableData('ANTENNA2')
-dpinfo.set_antennas(ant_name, ant_diameter, ant_pos, antenna1[0:1891], antenna2[0:1891])
+dpinfo.set_antennas(ant_name, ant_diameter, ant_pos, antenna1[0:n_baselines], antenna2[0:n_baselines])
 
 scan_num = measurementSet.GetMainTableData('SCAN_NUMBER')
 field_id = measurementSet.GetMainTableData('FIELD_ID')
