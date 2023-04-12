@@ -55,7 +55,7 @@ ant_pos  = measurementSet.GetAntennaTableData('POSITION')
 ant_diameter = measurementSet.GetAntennaTableData('DISH_DIAMETER')
 antenna1 = measurementSet.GetMainTableData('ANTENNA1')
 antenna2 = measurementSet.GetMainTableData('ANTENNA2')
-dpinfo.set_antennas(ant_name, ant_diameter, ant_pos, antenna1, antenna2)
+dpinfo.set_antennas(ant_name, ant_diameter, ant_pos, antenna1[0:1891], antenna2[0:1891])
 
 scan_num = measurementSet.GetMainTableData('SCAN_NUMBER')
 field_id = measurementSet.GetMainTableData('FIELD_ID')
@@ -113,8 +113,8 @@ preflag_step.set_info(dpinfo)
 aoflag_step.set_info(dpinfo)
 average_step.set_info(dpinfo)
 
-#preflag_step.set_next_step(queue_step) 
-aoflag_step.set_next_step(queue_step)
+preflag_step.set_next_step(queue_step) 
+#aoflag_step.set_next_step(queue_step)
 #average_step.set_next_step(null_step)
 
 vis = vis_ms.reshape([num_times, num_baselines, num_freqs, num_correlations])
@@ -125,9 +125,9 @@ for t in range(num_times):
     dpbuffer = dp3.DPBuffer()
     dpbuffer.set_flags(flags[t, :, :, :])
     dpbuffer.set_data(vis[t, :, :, :])
-    aoflag_step.process(dpbuffer)
+    preflag_step.process(dpbuffer)
 
-aoflag_step.finish()
+preflag_step.finish()
 
 output_flags = np.zeros((num_times, num_baselines, num_freqs, num_correlations),  np.bool8)
 
