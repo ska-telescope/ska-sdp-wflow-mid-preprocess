@@ -55,16 +55,16 @@ ant_pos  = measurementSet.GetAntennaTableData('POSITION')
 ant_diameter = measurementSet.GetAntennaTableData('DISH_DIAMETER')
 antenna1 = measurementSet.GetMainTableData('ANTENNA1')
 antenna2 = measurementSet.GetMainTableData('ANTENNA2')
-dpinfo.set_antennas(ant_name, ant_diameter, ant_pos, antenna1, antenna2)
-
-scan_num = measurementSet.GetMainTableData('SCAN_NUMBER')
-field_id = measurementSet.GetMainTableData('FIELD_ID')
 
 num_ants = len(ant_name)
 num_baselines = int(num_ants * (num_ants + 1)/2)
 num_freqs = len(chan_freq)
 
 
+dpinfo.set_antennas(ant_name, ant_diameter, ant_pos, antenna1[0: num_baselines], antenna2[0: num_baselines])
+
+scan_num = measurementSet.GetMainTableData('SCAN_NUMBER')
+field_id = measurementSet.GetMainTableData('FIELD_ID')
 
 # DPInfo: times
 
@@ -90,13 +90,12 @@ rfi_file = open(mask_loc[0], "rb")
 rfi_mask = pickle.load(rfi_file)
 
 mychan = np.where(rfi_mask)
-#chan = mychan[0].tolist()
-chan = "[1,22,30]"
+chan = mychan[0].tolist()
 parset = dp3.parameterset.ParameterSet()
 
-print(str(chan))
+#print(str(chan))
 
-parset.add("preflag.chan", chan)
+parset.add("preflag.chan", str(chan))
 parset.add("average.freqstep", str(8))
 parset.add("aoflag.autocorr", str(True))
 
@@ -113,7 +112,7 @@ preflag_step.set_info(dpinfo)
 aoflag_step.set_info(dpinfo)
 average_step.set_info(dpinfo)
 
-#preflag_step.set_next_step(queue_step) 
+preflag_step.set_next_step(aoflag_step) 
 aoflag_step.set_next_step(queue_step)
 #average_step.set_next_step(null_step)
 
@@ -125,9 +124,9 @@ for t in range(num_times):
     dpbuffer = dp3.DPBuffer()
     dpbuffer.set_flags(flags[t, :, :, :])
     dpbuffer.set_data(vis[t, :, :, :])
-    aoflag_step.process(dpbuffer)
+    preflag_step.process(dpbuffer)
 
-aoflag_step.finish()
+preflag_step.finish()
 
 output_flags = np.zeros((num_times, num_baselines, num_freqs, num_correlations),  np.bool8)
 

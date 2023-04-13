@@ -31,6 +31,8 @@ class visualise:
 
 
     def find_time_range_with_scan_field(self, sc, fld): 
+         print(self.scan[:, 0])
+         print(self.field[:, 0])
          a = np.intersect1d(np.where(self.scan[:, 0] == sc), np.where(self.field[:,0] == fld))
          print(a)
          return  a[0], a[-1] + 1
