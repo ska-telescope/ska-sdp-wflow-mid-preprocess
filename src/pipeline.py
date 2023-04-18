@@ -113,8 +113,8 @@ aoflag_step.set_info(dpinfo)
 average_step.set_info(dpinfo)
 
 preflag_step.set_next_step(aoflag_step) 
-aoflag_step.set_next_step(queue_step)
-#average_step.set_next_step(null_step)
+aoflag_step.set_next_step(average_step)
+average_step.set_next_step(queue_step)
 
 vis = vis_ms.reshape([num_times, num_baselines, num_freqs, num_correlations])
 #flags = flags_ms.reshape([num_times, num_baselines, num_freqs, num_correlations])
@@ -129,7 +129,7 @@ for t in range(num_times):
 
 preflag_step.finish()
 
-output_flags = np.zeros((num_times, num_baselines, num_freqs, num_correlations),  np.bool8)
+output_flags = np.zeros((num_times, num_baselines, int(num_freqs/8), num_correlations),  np.bool8)
 
 for i in range(num_times):
         print(i)
