@@ -81,6 +81,8 @@ print()
 dpinfo.set_times(first_time, last_time , interval)
 
 # DPInfo: freqeuency information
+print(chan_freq)
+print(chan_width)
 dpinfo.set_channels(chan_freq, chan_width)
 
 
@@ -106,15 +108,18 @@ aoflag_step = dp3.make_step("aoflag", parset, "aoflag.", dp3.MsType.regular)
 null_step = dp3.make_step("null", parset, "", dp3.MsType.regular)
 
 queue_step = steps.QueueOutput(parset, "")
-queue_step.set_info(dpinfo)
+#queue_step.set_info(dpinfo)
 
-preflag_step.set_info(dpinfo)
-aoflag_step.set_info(dpinfo)
-average_step.set_info(dpinfo)
+#preflag_step.set_info(dpinfo)
+#aoflag_step.set_info(dpinfo)
+#average_step.set_info(dpinfo)
 
 preflag_step.set_next_step(aoflag_step) 
 aoflag_step.set_next_step(average_step)
 average_step.set_next_step(queue_step)
+
+preflag_step.set_info(dpinfo)
+
 
 vis = vis_ms.reshape([num_times, num_baselines, num_freqs, num_correlations])
 #flags = flags_ms.reshape([num_times, num_baselines, num_freqs, num_correlations])
