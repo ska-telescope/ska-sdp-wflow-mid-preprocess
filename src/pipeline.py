@@ -95,6 +95,10 @@ mychan = np.where(rfi_mask)
 chan = mychan[0].tolist()
 parset = dp3.parameterset.ParameterSet()
 
+weights = np.ones([num_times, num_baselines, num_freqs, num_correlations], dtype="float32")
+
+
+
 #print(str(chan))
 
 parset.add("preflag.chan", str(chan))
@@ -128,6 +132,7 @@ flags = np.zeros([num_times, num_baselines, num_freqs, num_correlations], dtype=
 for t in range(num_times):
     print(t)
     dpbuffer = dp3.DPBuffer()
+    dpbuffer.set_weights(weights[t, :, :, :])
     dpbuffer.set_flags(flags[t, :, :, :])
     dpbuffer.set_data(vis[t, :, :, :])
     preflag_step.process(dpbuffer)
