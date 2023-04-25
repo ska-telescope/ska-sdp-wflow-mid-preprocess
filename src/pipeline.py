@@ -34,6 +34,7 @@ time = measurementSet.GetMainTableData('TIME')
 interval = measurementSet.GetMainTableData('INTERVAL')
 phase_center = measurementSet.GetFieldTableData('PHASE_DIR')
 
+uvw_ms = measurementSet.GetMainTableData('UVW')
 
 # define DPInfo
 vis_ms_dims = vis_ms.shape
@@ -96,13 +97,14 @@ chan = mychan[0].tolist()
 parset = dp3.parameterset.ParameterSet()
 
 weights = np.ones([num_times, num_baselines, num_freqs, num_correlations], dtype="float32")
-
+uvw = uvw_ms.reshape([num_times, num_baselines, 3])
 
 
 #print(str(chan))
 
 parset.add("preflag.chan", str(chan))
 parset.add("average.freqstep", str(8))
+parset.add("average.timestep", str(2))
 parset.add("aoflag.autocorr", str(True))
 
 
@@ -113,10 +115,6 @@ null_step = dp3.make_step("null", parset, "", dp3.MsType.regular)
 
 queue_step = steps.QueueOutput(parset, "")
 #queue_step.set_info(dpinfo)
-
-#preflag_step.set_info(dpinfo)
-#aoflag_step.set_info(dpinfo)
-#average_step.set_info(dpinfo)
 
 preflag_step.set_next_step(aoflag_step) 
 aoflag_step.set_next_step(average_step)
@@ -135,20 +133,19 @@ for t in range(num_times):
     dpbuffer.set_weights(weights[t, :, :, :])
     dpbuffer.set_flags(flags[t, :, :, :])
     dpbuffer.set_data(vis[t, :, :, :])
+    dpbuffer.set_uvw(uvw[t, :, :])
     preflag_step.process(dpbuffer)
 
 preflag_step.finish()
 
 output_flags = np.zeros((num_times, num_baselines, int(num_freqs/8), num_correlations),  np.bool8)
+output_visibilities = np.zeros((num_times, num_baselines, int(num_freqs/8), num_correlations))
 
-for i in range(num_times):
+for i in range(int(num_times/2) + 1):
         print(i)
         dpbuffer_from_queue = queue_step.queue.get()
         output_flags [i,:,:,:] = np.array(dpbuffer_from_queue.get_flags(), copy=False) 
-
-
-
-
+        output_visibilities[i,:,:,:]= np.array(dpbuffer_from_queue.get_data(),copy=False)
 
 out_vis_loc = output_loc[0] + "/vis.npy"
 out_old_flg_loc = output_loc[0] + "/old_flags.npy"
@@ -161,7 +158,7 @@ sc_num = output_loc[0] + "/scan_number.npy"
 field_id2 = field_id.reshape(num_times, num_baselines)
 scan_num2 = scan_num.reshape(num_times, num_baselines)
 
-np.save(out_vis_loc, vis)
+np.save(out_vis_loc, output_visibilities)
 np.save(out_old_flg_loc, flags)
 np.save(out_new_flg_loc,  output_flags)
 np.save(ant1, antenna1)
