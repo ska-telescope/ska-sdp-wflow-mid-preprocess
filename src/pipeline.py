@@ -1,3 +1,4 @@
+
 import numpy as np
 import dp3
 import argparse
@@ -12,6 +13,9 @@ parser.add_argument('--maskloc', type=str, nargs=1, help='location of the RFI ma
 parser.add_argument('--outloc', type=str, nargs=1, help='location of output')
 
 args = parser.parse_args()
+
+timestep = 1
+freqstep = 1
 
 ms_loc = args.msloc
 mask_loc = args.maskloc
@@ -103,8 +107,8 @@ uvw = uvw_ms.reshape([num_times, num_baselines, 3])
 #print(str(chan))
 
 parset.add("preflag.chan", str(chan))
-parset.add("average.freqstep", str(8))
-parset.add("average.timestep", str(2))
+parset.add("average.freqstep", str(freqstep))
+parset.add("average.timestep", str(timestep))
 parset.add("aoflag.autocorr", str(True))
 
 
@@ -138,10 +142,10 @@ for t in range(num_times):
 
 preflag_step.finish()
 
-output_flags = np.zeros((num_times, num_baselines, int(num_freqs/8), num_correlations),  np.bool8)
-output_visibilities = np.zeros((num_times, num_baselines, int(num_freqs/8), num_correlations))
+output_flags = np.zeros((num_times, num_baselines, int(num_freqs/freqstep), num_correlations),  np.bool8)
+output_visibilities = np.zeros((num_times, num_baselines, int(num_freqs/freqstep), num_correlations), np.complex)
 
-for i in range(int(num_times/2) + 1):
+for i in range(int(num_times/timestep)):
         print(i)
         dpbuffer_from_queue = queue_step.queue.get()
         output_flags [i,:,:,:] = np.array(dpbuffer_from_queue.get_flags(), copy=False) 
