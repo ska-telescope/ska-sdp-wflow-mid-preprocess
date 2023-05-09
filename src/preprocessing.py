@@ -46,7 +46,6 @@ for key in averaging_parameters:
     parset.add(my_str, str(averaging_parameters[key]))
 
 
-
 measurementSet = ms_operations.ReadMS(ms_loc)
 
 vis_ms = measurementSet.GetMainTableData('DATA')
@@ -56,8 +55,9 @@ chan_freq = measurementSet.GetFreqTableData('CHAN_FREQ')[0]
 chan_width = measurementSet.GetFreqTableData('CHAN_WIDTH')[0]
 
 time = measurementSet.GetMainTableData('TIME')
-interval = measurementSet.GetMainTableData('INTERVAL')
+intervals = measurementSet.GetMainTableData('INTERVAL')
 phase_center = measurementSet.GetFieldTableData('PHASE_DIR')
+
 
 uvw_ms = measurementSet.GetMainTableData('UVW')
 
@@ -70,7 +70,80 @@ antenna2 = measurementSet.GetMainTableData('ANTENNA2')
 num_ants = len(ant_name)
 num_baselines = int(num_ants * (num_ants + 1)/2)
 num_freqs = len(chan_freq)
+num_times = int(vis_ms.shape[0]/num_baselines)
+vis_ms_dims = vis_ms.shape
+num_pols = vis_ms_dims[2]
+
+
 
 scan_num = measurementSet.GetMainTableData('SCAN_NUMBER')
 field_id = measurementSet.GetMainTableData('FIELD_ID')
 
+scan_num_reshaped = scan_num.reshape([num_times, num_baselines]) 
+field_id_reshaped = field_id.reshape([num_times, num_baselines])
+time_reshaped = time.reshape([num_times, num_baselines])
+intervals_reshaped = intervals.reshape([num_times, num_baselines])
+
+scan_jumps = np.array([0])
+
+for t in range(1, num_times):
+   if scan_num_reshaped[t, 0] != scan_num_reshaped[t-1, 0] or field_id_reshaped[t, 0] != field_id_reshaped[t-1, 0]:
+      print(t)
+      scan_jumps = np.append(scan_jumps, t)
+
+if scan_jumps[-1] != num_times-1:
+   scan_jumps = np.append(scan_jumps, num_times-1)
+
+num_jumps = len(scan_jumps)      
+print(scan_jumps)
+print(num_jumps)
+
+
+# RFI mask for preflagger
+
+rfi_file = open(mask_loc[0], "rb")
+rfi_mask = pickle.load(rfi_file)
+
+mychan = np.where(rfi_mask)
+chan = mychan[0].tolist()
+parset.add("preflag.chan", str(chan))
+
+weights = np.ones([num_times, num_baselines, num_freqs, num_pols], dtype="float32")
+uvw = uvw_ms.reshape([num_times, num_baselines, 3])
+
+vis = vis_ms.reshape([num_times, num_baselines, num_freqs, num_pols])
+flags = np.zeros([num_times, num_baselines, num_freqs, num_pols], dtype=bool)
+
+for i in range(num_jumps - 1):
+   t_begin = scan_jumps[i]
+   t_end = scan_jumps[i + 1]
+   first_time = time_reshaped[t_begin, 0]
+   last_time = time_reshaped[t_end, 0]
+   interval = intervals_reshaped[t_begin, 0] 
+   dpinfo = dp3.DPInfo(num_pols)
+   dpinfo.set_antennas(ant_name, ant_diameter, ant_pos, antenna1[0: num_baselines], antenna2[0: num_baselines])
+   dpinfo.set_channels(chan_freq, chan_width)       
+   dpinfo.set_times(first_time, last_time , interval)
+
+
+   preflag_step = dp3.make_step("preflag", parset,"preflag.", dp3.MsType.regular)
+   average_step = dp3.make_step("average", parset, "average.", dp3.MsType.regular)
+   aoflag_step = dp3.make_step("aoflag", parset, "aoflag.", dp3.MsType.regular)
+   null_step = dp3.make_step("null", parset, "", dp3.MsType.regular)
+   
+   queue_step = steps.QueueOutput(parset, "")   
+
+   preflag_step.set_next_step(aoflag_step) 
+   aoflag_step.set_next_step(average_step)
+   average_step.set_next_step(queue_step)
+   
+   preflag_step.set_info(dpinfo)
+   for t in range(t_begin, t_end):
+       print(t)
+       dpbuffer = dp3.DPBuffer()
+       dpbuffer.set_weights(weights[t, :, :, :])
+       dpbuffer.set_flags(flags[t, :, :, :])
+       dpbuffer.set_data(vis[t, :, :, :])
+       dpbuffer.set_uvw(uvw[t, :, :])
+       preflag_step.process(dpbuffer)   
+   preflag_step.finish()    
