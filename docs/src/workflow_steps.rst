@@ -27,9 +27,32 @@ To run the pipeline from the src directory, run the following command:
 
      python3 pipeline.py --msloc your_MeasurementSet --maskloc your_RFI_mask_pickle_file.pickle --paramsloc your_parameters.json 
    
-   where ``--msloc`` is the location of ``your_MeasurementSet``, ``--maskloc`` is the location of ``your_RFI_mask_pickle_file``, and 
-   ``--paramsloc`` is the location of ``your_parameters`` to identify which DP3 parameters you would like to use for each step. The parameters
-   should be provided through a JSON file. An example file can be found under /src folder. 
+
+where ``--msloc`` is the location of ``your_MeasurementSet``, ``--maskloc`` is the location of ``your_RFI_mask_pickle_file``, and 
+``--paramsloc`` is the location of ``your_parameters`` to identify which DP3 parameters you would like to use for each step. The parameters
+should be provided through a JSON file. Here is an example of the contents in such a file. 
+
+.. code-block:: bash
+
+   {
+     "preflagger": [
+        {
+        }
+     ],  
+     "aoflagger": [
+         {
+            "autocorr" : "True"
+         }
+     ],
+     "averaging": [
+         {
+            "freqstep": 8,
+            "timestep": 2
+         }
+     ]
+}
+
+The parameters' names are the same as in DP3. For example, ``freqstep`` is the number of channels to be averaged together. 
 
 
 
