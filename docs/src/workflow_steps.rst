@@ -25,7 +25,7 @@ To run the pipeline from the src directory, run the following command:
 
   .. code-block:: bash
 
-     python3 pipeline.py --msloc your_MeasurementSet --maskloc your_RFI_mask_pickle_file.pickle --paramsloc your_parameters.json 
+ python3 pipeline.py --msloc your_MeasurementSet --maskloc your_RFI_mask_pickle_file.pickle --paramsloc your_parameters.json 
    
 
 where ``--msloc`` is the location of ``your_MeasurementSet``, ``--maskloc`` is the location of ``your_RFI_mask_pickle_file``, and 
