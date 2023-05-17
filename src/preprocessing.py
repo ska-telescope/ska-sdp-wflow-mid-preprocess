@@ -100,6 +100,7 @@ intervals_reshaped = intervals.reshape([num_times, num_baselines])
 
 scan_jumps = np.array([0])
 
+
 for t in range(1, num_times):
    if scan_num_reshaped[t, 0] != scan_num_reshaped[t-1, 0] or field_id_reshaped[t, 0] != field_id_reshaped[t-1, 0]:
       print(t)
@@ -109,8 +110,25 @@ if scan_jumps[-1] != num_times-1:
    scan_jumps = np.append(scan_jumps, num_times-1)
 
 num_jumps = len(scan_jumps)      
-print(scan_jumps)
-print(num_jumps)
+
+new_num_times = num_times
+new_num_freqs = num_freqs
+
+fractional_time_corrections = 0
+fractional_freq_corrections = 0
+
+for i in range(1,num_jumps):
+  if int(scan_jumps[i] - scan_jumps[i-1]) % timestep != 0:
+     fractional_time_corrections = fractional_time_corrections + 1
+
+if num_freqs % freqstep != 0:
+   fractional_freq_corrections = 1
+
+new_num_times = num_times // timestep + fractional_time_corrections
+new_num_freqs = num_freqs // freqstep + fractional_freq_corrections
+
+print("number of time slots after averaging: ",str(new_num_times))
+print("number of channels after averaging: ", str(new_num_freqs))  
 
 
 # RFI mask for preflagger
@@ -129,8 +147,8 @@ vis = vis_ms.reshape([num_times, num_baselines, num_freqs, num_pols])
 flags = np.zeros([num_times, num_baselines, num_freqs, num_pols], dtype=bool)
 
 
-output_flags = np.zeros((int(num_times/timestep), num_baselines, int(num_freqs/freqstep), num_pols),  np.bool8)
-output_visibilities = np.zeros((int(num_times/timestep), num_baselines, int(num_freqs/freqstep), num_pols), np.complex)
+output_flags = np.zeros((new_num_times, num_baselines, new_num_freqs, num_pols),  np.bool8)
+output_visibilities = np.zeros((new_num_times, num_baselines, new_num_freqs, num_pols), np.complex)
 #output_uvw = np.zeros((int(num_times/timestep), num_baselines)
 
 
