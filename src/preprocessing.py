@@ -28,6 +28,20 @@ print("\nPreflagger: ", params['preflagger'][0])
 print("\nAOflagger: ", params['aoflagger'][0])
 print("\nAveraging: ", params['averaging'][0]['freqstep'])
 
+timestep = 1
+freqstep = 1
+
+try:
+  freqstep = params['averaging'][0]['freqstep']
+except Exception:
+  print('No frequency step for averaging provided. Default value 1 will be used')
+
+  
+try:
+  timestep = params['averaging'][0]['timestep']
+except Exception:
+  print('No time step for averaging provided. Default value 1 will be used')
+
 parset = dp3.parameterset.ParameterSet()
 
 preflagger_parameters = params['preflagger'][0]
@@ -114,6 +128,13 @@ uvw = uvw_ms.reshape([num_times, num_baselines, 3])
 vis = vis_ms.reshape([num_times, num_baselines, num_freqs, num_pols])
 flags = np.zeros([num_times, num_baselines, num_freqs, num_pols], dtype=bool)
 
+
+output_flags = np.zeros((int(num_times/timestep), num_baselines, int(num_freqs/freqstep), num_pols),  np.bool8)
+output_visibilities = np.zeros((int(num_times/timestep), num_baselines, int(num_freqs/freqstep), num_pols), np.complex)
+#output_uvw = np.zeros((int(num_times/timestep), num_baselines)
+
+
+start_point = 0
 for i in range(num_jumps - 1):
    t_begin = scan_jumps[i]
    t_end = scan_jumps[i + 1]
@@ -138,6 +159,7 @@ for i in range(num_jumps - 1):
    average_step.set_next_step(queue_step)
    
    preflag_step.set_info(dpinfo)
+   
    for t in range(t_begin, t_end):
        print(t)
        dpbuffer = dp3.DPBuffer()
@@ -147,3 +169,12 @@ for i in range(num_jumps - 1):
        dpbuffer.set_uvw(uvw[t, :, :])
        preflag_step.process(dpbuffer)   
    preflag_step.finish()    
+   
+   queue_size = queue_step.queue.qsize()
+   for j in range(queue_size):
+        dpbuffer_from_queue = queue_step.queue.get()
+        output_flags [start_point + j,:,:,:] = np.array(dpbuffer_from_queue.get_flags(), copy=False) 
+        output_visibilities[start_point + j,:,:,:]= np.array(dpbuffer_from_queue.get_data(),copy=False)  
+
+   start_point = start_point + queue_size
+   print('start_point: ', str(start_point))

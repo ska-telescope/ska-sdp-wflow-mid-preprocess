@@ -1,4 +1,5 @@
 
+
 import numpy as np
 import dp3
 import argparse
@@ -121,8 +122,8 @@ queue_step = steps.QueueOutput(parset, "")
 #queue_step.set_info(dpinfo)
 
 preflag_step.set_next_step(aoflag_step) 
-aoflag_step.set_next_step(average_step)
-average_step.set_next_step(queue_step)
+aoflag_step.set_next_step(queue_step)
+#average_step.set_next_step(queue_step)
 
 preflag_step.set_info(dpinfo)
 
