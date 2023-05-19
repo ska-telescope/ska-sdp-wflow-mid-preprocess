@@ -6,6 +6,7 @@ import ms_operations
 import pickle
 import json
 from dp3 import steps
+import oskar
 
 parser = argparse.ArgumentParser(description='pipeline settings')
 parser.add_argument('--msloc', type=str, nargs=1, help='location of the measurementset')
@@ -24,9 +25,9 @@ output_loc = args.outloc
 with open(params_loc[0], 'r') as params_file:
     params = json.load(params_file)
     
-print("\nPreflagger: ", params['preflagger'][0]) 
-print("\nAOflagger: ", params['aoflagger'][0])
-print("\nAveraging: ", params['averaging'][0]['freqstep'])
+#print("\nPreflagger: ", params['preflagger'][0]) 
+#print("\nAOflagger: ", params['aoflagger'][0])
+#print("\nAveraging: ", params['averaging'][0]['freqstep'])
 
 timestep = 1
 freqstep = 1
@@ -149,7 +150,7 @@ flags = np.zeros([num_times, num_baselines, num_freqs, num_pols], dtype=bool)
 
 output_flags = np.zeros((new_num_times, num_baselines, new_num_freqs, num_pols),  np.bool8)
 output_visibilities = np.zeros((new_num_times, num_baselines, new_num_freqs, num_pols), np.complex)
-#output_uvw = np.zeros((int(num_times/timestep), num_baselines)
+output_uvw = np.zeros((new_num_times, num_baselines,3))
 
 
 start_point = 0
@@ -193,6 +194,18 @@ for i in range(num_jumps - 1):
         dpbuffer_from_queue = queue_step.queue.get()
         output_flags [start_point + j,:,:,:] = np.array(dpbuffer_from_queue.get_flags(), copy=False) 
         output_visibilities[start_point + j,:,:,:]= np.array(dpbuffer_from_queue.get_data(),copy=False)  
+        output_uvw[start_point + j,:, :] = np.array(dpbuffer_from_queue.get_uvw(), copy=False)        
+
 
    start_point = start_point + queue_size
    print('start_point: ', str(start_point))
+
+ms = oskar.MeasurementSet.create(output_loc[0], num_ants, new_num_freqs, num_pols, 100, 100)
+
+#output_flags_ms = output_flags.reshape((new_num_times * num_baselines, new_num_freqs, num_pols))
+#output_visibilities_ms = output_visibilities.reshape((new_num_times * num_baselines, new_num_freqs, num_pols))
+#output_uvw_ms  = output_uvw.reshape((new_times * num_baselines, 3))
+
+for t in range(new_num_times):
+    start_row = t * num_baselines
+    ms.write_vis(start_row, 0, new_num_freqs, num_baselines, output_visibilities[t, :, :, :])  
