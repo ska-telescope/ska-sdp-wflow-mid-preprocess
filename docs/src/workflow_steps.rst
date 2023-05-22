@@ -25,7 +25,7 @@ To run the pipeline from the src directory, run the following command:
 
   .. code-block:: bash
 
-python3 pipeline.py --msloc your_MeasurementSet --maskloc your_RFI_mask_pickle_file.pickle --paramsloc your_parameters.json 
+python3 pipeline.py --msloc your_MeasurementSet --maskloc your_RFI_mask_pickle_file.pickle --paramsloc your_parameters.json --outloc your_output.ms
    
 
 where ``--msloc`` is the location of ``your_MeasurementSet``, ``--maskloc`` is the location of ``your_RFI_mask_pickle_file``, and 
@@ -52,7 +52,8 @@ should be provided through a JSON file. Here is an example of the contents in su
      ]
 }
 
-The parameters' names are the same as in DP3. For example, ``freqstep`` is the number of channels to be averaged together. 
+The parameters' names are the same as in DP3. For example, ``freqstep`` is the number of channels to be averaged together. The ``--outloc`` is the location of the 
+output measurementset, where obviously many of the columns have different dimensions from the original input measurementset because of averaging. 
 
 
 
