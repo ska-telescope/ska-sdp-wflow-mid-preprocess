@@ -203,9 +203,21 @@ for i in range(num_jumps - 1):
 ms = oskar.MeasurementSet.create(output_loc[0], num_ants, new_num_freqs, num_pols, 100, 100)
 
 #output_flags_ms = output_flags.reshape((new_num_times * num_baselines, new_num_freqs, num_pols))
-#output_visibilities_ms = output_visibilities.reshape((new_num_times * num_baselines, new_num_freqs, num_pols))
+output_visibilities_ms = output_visibilities.reshape((new_num_times * num_baselines, new_num_freqs, num_pols))
 #output_uvw_ms  = output_uvw.reshape((new_times * num_baselines, 3))
 
 for t in range(new_num_times):
     start_row = t * num_baselines
     ms.write_vis(start_row, 0, new_num_freqs, num_baselines, output_visibilities[t, :, :, :])  
+ 
+   
+msout = ms_operations.ReadMS(output_loc)
+
+vis_out = output_visibilities.reshape((new_num_times * num_baselines, new_num_freqs, num_pols))
+msout.write_maintable_column('DATA', vis_out)
+ 
+flags_out = output_flags.reshape((new_num_times * num_baselines, new_num_freqs, num_pols))
+msout.write_maintable_column('FLAG', flags_out)
+
+uvw_out = output_uvw.reshape((new_num_times * num_baselines, 3))
+msout.write_maintable_column('UVW', uvw_out)

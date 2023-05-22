@@ -51,7 +51,7 @@ class ReadMS:
         The __init__ method returns None
         '''
 
-        self.mainTable = tables.table(inputFile)
+        self.mainTable = tables.table(inputFile, readonly=False)
         self.frequencyTable = tables.table(os.path.join(inputFile[0], 'SPECTRAL_WINDOW'))
         self.polarizationTable = tables.table(os.path.join(inputFile[0], 'POLARIZATION'))
         self.antennaTable = tables.table(os.path.join(inputFile[0], 'ANTENNA'))
@@ -194,6 +194,12 @@ class ReadMS:
 
         return None
 
+    
+    def write_maintable_column(self, column_name, value):
+        
+        self.mainTable.putcol(column_name, value)
+
+
     # def PlotSamplingFunction(self, freqChannel='all', include_w=False):
     #
     #     '''
@@ -217,7 +223,7 @@ class ReadMS:
     #     # raising error if requested number of channels is higher than the available number of channels
     #     elif freqChannel > len(self.frequencyChannels):
     #         raise IndexError('The requested range of frequency channel values is out of bounds.')
-    #
+    # 
     #     # generating the plot (via matplotlib)
     #     fig = plt.figure()
     #     ax = fig.add_subplot(1, 1, 1)
