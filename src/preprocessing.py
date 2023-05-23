@@ -6,7 +6,9 @@ import ms_operations
 import pickle
 import json
 from dp3 import steps
-import oskar
+import casacore.tables as tables
+
+
 
 parser = argparse.ArgumentParser(description='pipeline settings')
 parser.add_argument('--msloc', type=str, nargs=1, help='location of the measurementset')
@@ -156,7 +158,7 @@ output_uvw = np.zeros((new_num_times, num_baselines,3))
 start_point = 0
 for i in range(num_jumps - 1):
    t_begin = scan_jumps[i]
-   t_end = scan_jumps[i + 1]
+   t_end = scan_jumps[i + 1] 
    first_time = time_reshaped[t_begin, 0]
    last_time = time_reshaped[t_end, 0]
    interval = intervals_reshaped[t_begin, 0] 
@@ -200,24 +202,66 @@ for i in range(num_jumps - 1):
    start_point = start_point + queue_size
    print('start_point: ', str(start_point))
 
-ms = oskar.MeasurementSet.create(output_loc[0], num_ants, new_num_freqs, num_pols, 100, 100)
 
-#output_flags_ms = output_flags.reshape((new_num_times * num_baselines, new_num_freqs, num_pols))
+
+output_flags_ms = output_flags.reshape((new_num_times * num_baselines, new_num_freqs, num_pols))
 output_visibilities_ms = output_visibilities.reshape((new_num_times * num_baselines, new_num_freqs, num_pols))
-#output_uvw_ms  = output_uvw.reshape((new_times * num_baselines, 3))
+output_uvw_ms  = output_uvw.reshape((new_num_times * num_baselines, 3))
 
-for t in range(new_num_times):
-    start_row = t * num_baselines
-    ms.write_vis(start_row, 0, new_num_freqs, num_baselines, output_visibilities[t, :, :, :])  
- 
+def msgen(outloc, ntimes, nbase, nchan, npols):
+    col0 = tables.tableutil.makearrcoldesc(
+                "UVW",
+                0.0,
+                1,
+                shape=[3],
+                options=0,
+                comment="Vector with uvw coordinates (in meters)",
+                datamanagergroup="UVW",
+                datamanagertype="TiledColumnStMan",
+                keywords={
+                    "QuantumUnits": ["m", "m", "m"],
+                    "MEASINFO": {"type": "uvw", "Ref": "ITRF"},
+                },
+            )
+
+
+    col1 = tables.tableutil.makearrcoldesc(
+                "FLAG",
+                False,
+                2,
+                shape=[nchan, npols],
+                options=4,
+                datamanagertype="TiledColumnStMan",
+                datamanagergroup="Data",
+                comment="The data flags, array of bools with same shape as data",
+            )
+
+
+    col2 = tables.tableutil.makearrcoldesc(
+                "DATA",
+                0j,
+                2,
+                shape=[nchan, npols],
+                options=4,
+                valuetype="complex",
+                keywords={"UNIT": "Jy"},
+                datamanagertype="TiledColumnStMan",
+                datamanagergroup="Data",
+                comment="The data column",
+            )
+
+    desc = tables.tableutil.maketabdesc([col0, col1, col2])
+    tb = tables.table(outloc, desc, readonly=False, nrow=ntimes * nbase,  ack=False)
+    return tb  
+
+
+out_tb = msgen(output_loc[0],new_num_times, num_baselines,  new_num_freqs, num_pols)
    
-msout = ms_operations.ReadMS(output_loc)
-
 vis_out = output_visibilities.reshape((new_num_times * num_baselines, new_num_freqs, num_pols))
-msout.write_maintable_column('DATA', vis_out)
+out_tb.putcol('DATA', vis_out)
  
 flags_out = output_flags.reshape((new_num_times * num_baselines, new_num_freqs, num_pols))
-msout.write_maintable_column('FLAG', flags_out)
+out_tb.putcol('FLAG', flags_out)
 
 uvw_out = output_uvw.reshape((new_num_times * num_baselines, 3))
-msout.write_maintable_column('UVW', uvw_out)
+out_tb.putcol('UVW', uvw_out)
